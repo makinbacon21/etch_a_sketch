@@ -1,12 +1,10 @@
 /*
-  Rotary Encoder Demo
-  rot-encode-demo.ino
-  Demonstrates operation of Rotary Encoder
-  Displays results on Serial Monitor
-  DroneBot Workshop 2019
-  https://dronebotworkshop.com
+  RGB Matrix Panel Etch-A-Sketch
+  Thomas Makin & Katelynn Swaim
+  ENGR 015 Final Project
 */
 
+// RGB Matrix Panel library (Adafruit)
 #include <RGBmatrixPanel.h>
 
 // Rotary Encoder Inputs
@@ -27,24 +25,32 @@
 // Slide Potentiometer
 #define slide     A4
 
+// Matrix panel definition
 RGBmatrixPanel matrix(matrixA, matrixB, matrixC, 
                       matrixD, matrixCLK, matrixLAT,
                       matrixOE, false);
 
+// Horizontal encoder values
 int currentHorizCLK;
 int previousHorizCLK;
 
+// Vertical encoder values
 int currentVertCLK;
 int previousVertCLK;
 
+// Slider value
 int slider;
 
-int x = 0;
-int y = 63;
+// Color hex values
 int hex;
 int prevHex;
 int firstHex;
 
+// X and Y xalues (start at (0,31)
+int x = 0;
+int y = 62;
+
+// RGB 565 color
 uint16_t color;
 
 void setup() {
@@ -61,11 +67,12 @@ void setup() {
   matrix.begin();
   matrix.fillScreen(matrix.Color333(0, 0, 0));
 
-  // Read the initial state of inputCLK
-  // Assign to previousStateCLK variable
+  // Read the initial state of CLK pins
+  // Assign to previous CLK variables
   previousHorizCLK = digitalRead(horizCLK);
   previousVertCLK = digitalRead(vertCLK);
 
+  // Set up slider averaging
   slider = analogRead(slide);
   hex = slider * 0x50e8;
   prevHex = hex;
@@ -77,15 +84,17 @@ void loop() {
   slider = analogRead(slide);
   firstHex = prevHex;
   prevHex = hex;
-  hex = slider * 0x50e8;
+  hex = slider * 0x50e8;  // 0x50e8 is the scale factor we determined was appropriate
 
+  // Average last 3 values for artificial debouncing
   int avg = (hex + prevHex + firstHex)/3;
-  
+
+  // Get RGB values from hex code
   int b = avg%0x100;
   int g = (avg/0x100)%0x100;
   int r = (avg/0x10000)%0x100;
 
-  // Convert to RGB
+  // Create 8-bit RGB color in 565 format for matrix lib
   color = matrix.Color888(r, g, b);
 
   // Draw pixel at half x and y vals (encoders jump in 
